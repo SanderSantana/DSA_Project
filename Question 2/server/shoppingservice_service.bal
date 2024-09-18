@@ -2,12 +2,39 @@ import ballerina/grpc;
 
 listener grpc:Listener ep = new (9090);
 
+map<Product> products = {};
+map<CartRequest[]> carts = {};
+map<User> users = {};
+
+
 @grpc:Descriptor {value: SHOPPING_DESC}
 service "ShoppingService" on ep {
 
     remote function AddProduct(stream<Product, grpc:Error?> clientStream) returns ProductResponse|error {
 
-        return error grpc:UnimplementedError("not suppported yet");
+        string addedProductCode = "";
+        string addedDescription = "";
+
+        // Iterate over the incoming stream of Products
+        check from Product product in clientStream
+            do {
+                string productCode = product.sku;
+                string description = product.description;
+
+                // Store the product
+                products[productCode] = product;
+
+                addedProductCode = productCode;
+                addedDescription = description;
+            };
+
+        // Return a response
+        ProductResponse response = {
+            product_code: addedProductCode,
+            description: addedDescription
+        };
+        return response;
+
 
     }
 
