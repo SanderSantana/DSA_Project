@@ -64,9 +64,23 @@ service "ShoppingService" on ep {
 
     remote function SearchProduct(stream<ProductId, grpc:Error?> clientStream) returns Product|error {
 
-        return error grpc:UnimplementedError("not suppported yet");
+      Product foundProduct = {};
 
-    }
+    // Iterate over the incoming stream of Product IDs
+    check from ProductId productId in clientStream
+        do {
+            string sku = productId.sku;
+
+            // Search for the product by SKU
+            Product? product = products[sku];
+
+            if product is Product {
+                foundProduct = product;
+            } else {
+
+                return error("Product with SKU " + sku + " not found");
+            }
+
 
     remote function AddToCart(stream<CartRequest, grpc:Error?> clientStream) returns CartResponse|error {
 
