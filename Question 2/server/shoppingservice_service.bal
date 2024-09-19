@@ -122,7 +122,6 @@ service "ShoppingService" on ep {
 
                 return error("Product with SKU " + sku + " not found");
             }
-        }
 
 
     remote function AddToCart(stream<CartRequest, grpc:Error?> clientStream) returns CartResponse|error {
