@@ -6,7 +6,6 @@ map<Product> products = {};
 map<CartRequest[]> carts = {};
 map<User> users = {};
 
-
 @grpc:Descriptor {value: SHOPPING_DESC}
 service "ShoppingService" on ep {
 
@@ -35,12 +34,11 @@ service "ShoppingService" on ep {
         };
         return response;
 
-
     }
 
     remote function CreateUsers(stream<User, grpc:Error?> clientStream) returns UserResponse|error {
 
-    // Iterate over the incoming stream of Users
+        // Iterate over the incoming stream of Users
         check from User user in clientStream
             do {
                 string userId = user.user_id;
@@ -52,18 +50,40 @@ service "ShoppingService" on ep {
         UserResponse response = {message: "Users created successfully"};
         return response;
 
-
     }
 
     remote function UpdateProduct(stream<Product, grpc:Error?> clientStream) returns ProductResponse|error {
 
-        return error grpc:UnimplementedError("not suppported yet");
+        string updatedProductCode = "";
+        string updatedDescription = "";
+
+        // Iterate over the incoming product stream
+        check from Product product in clientStream
+            do {
+                string productCode = product.sku;
+
+                // Check if the product exists
+                if products.hasKey(productCode) {
+                    products[productCode] = product;
+                    updatedProductCode = productCode;
+                    updatedDescription = product.description;
+                } else {
+                    return error("Product with SKU '" + productCode + "' not found");
+                }
+            };
+
+        // Return a response
+        ProductResponse response = {
+            product_code: updatedProductCode,
+            description: updatedDescription
+        };
+        return response;
 
     }
 
     remote function RemoveProduct(stream<ProductId, grpc:Error?> clientStream) returns ProductList|error {
 
-    Product[] removedProducts = [];
+        Product[] removedProducts = [];
 
         // Iterate over the incoming stream of Product IDs
         check from ProductId productId in clientStream
@@ -85,7 +105,6 @@ service "ShoppingService" on ep {
         ProductList response = {products: removedProducts};
         return response;
 
-
     }
 
     remote function ListAvailableProducts(stream<Empty, grpc:Error?> clientStream) returns ProductList|error {
@@ -106,34 +125,58 @@ service "ShoppingService" on ep {
 
     remote function SearchProduct(stream<ProductId, grpc:Error?> clientStream) returns Product|error {
 
-      Product foundProduct = {};
+        Product foundProduct = {};
 
-    // Iterate over the incoming stream of Product IDs
-    check from ProductId productId in clientStream
-        do {
-            string sku = productId.sku;
+        // Iterate over the incoming stream of Product IDs
+        check from ProductId productId in clientStream
+            do {
+                string sku = productId.sku;
 
-            // Search for the product by SKU
-            Product? product = products[sku];
+                // Search for the product by SKU
+                Product? product = products[sku];
 
-            if product is Product {
-                foundProduct = product;
-            } else {
+                if product is Product {
+                    foundProduct = product;
+                } else {
 
-                return error("Product with SKU " + sku + " not found");
-            }
-        };
+                    return error("Product with SKU " + sku + " not found");
+                }
+            };
 
-    // Return the found product
-    return foundProduct;
+        // Return the found product
+        return foundProduct;
 
-
-        // return error grpc:UnimplementedError("not suppported yet");
     }
 
     remote function AddToCart(stream<CartRequest, grpc:Error?> clientStream) returns CartResponse|error {
 
-        return error grpc:UnimplementedError("not suppported yet");
+        // Iterate over the incoming stream of CartRequest messages
+        check from CartRequest cartRequest in clientStream
+            do {
+                string userId = cartRequest.user_id;
+                string sku = cartRequest.sku;
+
+                // Check if the product exists in the product list
+                Product? product = products[sku];
+                if product is Product {
+                    // Initialize user's cart if it's nil
+                    CartRequest[] userCart = carts[userId] ?: [];
+
+                    // Add the product to the user's cart
+                    userCart.push(cartRequest);
+
+                    // Update the cart in the map
+                    carts[userId] = userCart;
+                } else {
+                    return error("Product with SKU " + sku + " not found.");
+                }
+            };
+
+        // Return a success message after adding all items to the cart
+        CartResponse response = {
+            message: "Items successfully added to cart"
+        };
+        return response;
 
     }
 
