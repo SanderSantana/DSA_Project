@@ -85,8 +85,8 @@ type ProgrammeNotFound record {|
 
 //Ballerina database connection and configuration
 //Ballerina http Client declaration
-mysql:Client programmeDevelopmentDb = check new ("localhost", "root", "root", "programmedevelopmentdb", 3306);s
+mysql:Client programmeDevelopmentDb = check new ("localhost", "root", "root", "programmedevelopmentdb", 3306);
 
-ervice /programme\-development on new http:Listener(9090) {
+service /programme\-development on new http:Listener(9090) {
 
 }
