@@ -122,7 +122,14 @@ service "ShoppingService" on ep {
 
                 return error("Product with SKU " + sku + " not found");
             }
+        };
 
+    // Return the found product
+    return foundProduct;
+
+
+        // return error grpc:UnimplementedError("not suppported yet");
+    }
 
     remote function AddToCart(stream<CartRequest, grpc:Error?> clientStream) returns CartResponse|error {
 
