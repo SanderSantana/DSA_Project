@@ -52,7 +52,28 @@ service "ShoppingService" on ep {
 
     remote function RemoveProduct(stream<ProductId, grpc:Error?> clientStream) returns ProductList|error {
 
-        return error grpc:UnimplementedError("not suppported yet");
+    Product[] removedProducts = [];
+
+        // Iterate over the incoming stream of Product IDs
+        check from ProductId productId in clientStream
+            do {
+                string productCode = productId.sku;
+
+                // Check if the product exists in the map
+                Product? product = products[productCode]; // This returns a Product? (optional type)
+
+                if product is Product { // Check if the product is not nil
+                    removedProducts.push(product);
+
+                    // Correct the removal call. We don't need to assign the result of remove.
+                    _ = products.remove(productCode); // Directly call remove here
+                }
+            };
+
+        // Return the list of removed products
+        ProductList response = {products: removedProducts};
+        return response;
+
 
     }
 
