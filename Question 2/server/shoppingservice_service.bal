@@ -40,7 +40,18 @@ service "ShoppingService" on ep {
 
     remote function CreateUsers(stream<User, grpc:Error?> clientStream) returns UserResponse|error {
 
-        return error grpc:UnimplementedError("not suppported yet");
+    // Iterate over the incoming stream of Users
+        check from User user in clientStream
+            do {
+                string userId = user.user_id;
+                // Store the user
+                users[userId] = user;
+            };
+
+        // Return a success response
+        UserResponse response = {message: "Users created successfully"};
+        return response;
+
 
     }
 
@@ -79,7 +90,17 @@ service "ShoppingService" on ep {
 
     remote function ListAvailableProducts(stream<Empty, grpc:Error?> clientStream) returns ProductList|error {
 
-        return error grpc:UnimplementedError("not suppported yet");
+        // Return the list of available products
+        Product[] availableProducts = [];
+
+        foreach var product in products {
+            availableProducts.push(product);
+        }
+
+        ProductList response = {products: availableProducts};
+        return response;
+
+        // return error grpc:UnimplementedError("not suppported yet");
 
     }
 
