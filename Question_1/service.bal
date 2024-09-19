@@ -96,3 +96,13 @@ service /programme\-development on new http:Listener(9090) {
 
 
 }
+// 3. Update an existing programme by programme code
+    resource function put programmes/[string programmeCode](NewProgramme updatedProgramme) returns http:Ok|error {
+        _ = check programmeDevelopmentDb->execute(`
+            UPDATE programmes 
+            SET title = ${updatedProgramme.title}, nqf_level = ${updatedProgramme.nqfLevel}, 
+                faculty = ${updatedProgramme.faculty}, department = ${updatedProgramme.department}, 
+                registration_date = ${updatedProgramme.registrationDate} 
+            WHERE programme_code = ${programmeCode};`);
+        return http:OK;
+    }
