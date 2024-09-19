@@ -30,11 +30,7 @@ content-type: application/json
 
 ### 2. Retrieves a list of all programmes
 GET http://localhost:9090/programme-development/programmes
-   resource function get programmes() returns Programme[]|error {
-        stream<Programme, sql:Error?> programmeStream = programmeDevelopmentDb->query(`SELECT * FROM programmes`);
-        return from var programme in programmeStream
-            select programme;
-    }
+
 
 ### 3. Update an existing programme by programme code
 PUT http://localhost:9090/programme-development/programmes/CSA101

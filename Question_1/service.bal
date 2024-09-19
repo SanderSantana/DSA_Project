@@ -93,7 +93,12 @@ mysql:Client programmeDevelopmentDb = check new ("localhost", "root", "root", "p
 service /programme\-development on new http:Listener(9090) {
 
 //Add  code in here--Numerical order- Confirm curley braces stay in order
-
+// 2. Retrieves a list of all programmes
+   resource function get programmes() returns Programme[]|error {
+        stream<Programme, sql:Error?> programmeStream = programmeDevelopmentDb->query(`SELECT * FROM programmes`);
+        return from var programme in programmeStream
+            select programme;
+    }
 
 }
 // 3. Update an existing programme by programme code
