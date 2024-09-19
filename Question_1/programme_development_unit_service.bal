@@ -92,16 +92,15 @@ mysql:Client programmeDevelopmentDb = check new ("localhost", "root", "root", "p
 
 service /programme\-development on new http:Listener(9090) {
 
-//Add  code in here--Numerical order- Confirm curley braces stay in order
-// 2. Retrieves a list of all programmes
-   resource function get programmes() returns Programme[]|error {
+    //Add  code in here--Numerical order- Confirm curley braces stay in order
+    // 2. Retrieves a list of all programmes
+    resource function get programmes() returns Programme[]|error {
         stream<Programme, sql:Error?> programmeStream = programmeDevelopmentDb->query(`SELECT * FROM programmes`);
         return from var programme in programmeStream
             select programme;
     }
 
-}
-// 3. Update an existing programme by programme code
+    // 3. Update an existing programme by programme code
     resource function put programmes/[string programmeCode](NewProgramme updatedProgramme) returns http:Ok|error {
         _ = check programmeDevelopmentDb->execute(`
             UPDATE programmes 
@@ -111,6 +110,7 @@ service /programme\-development on new http:Listener(9090) {
             WHERE programme_code = ${programmeCode};`);
         return http:OK;
     }
+
     // 4. Retrieve a specific programme by specifying the programme code
     resource function get programmes/[string programme_code]() returns Programme|ProgrammeNotFound|error {
         Programme|sql:Error programme = programmeDevelopmentDb->queryRow(`SELECT * FROM programmes WHERE programme_code = ${programme_code}`);
@@ -121,3 +121,26 @@ service /programme\-development on new http:Listener(9090) {
             return programmeNotFound;
         }
         return programme;
+    }
+
+
+
+
+
+
+
+    // 6.retrieve all programmes due for review(AFTER 5 YEARS)
+    resource function get programmes/dueForReview() returns Programme[]|error {
+        stream<Programme, sql:Error?> programmeStream = programmeDevelopmentDb->query(`SELECT * FROM programmes WHERE DATE_ADD(registration_date, INTERVAL 5 YEAR) <= NOW()`);
+        return from var programme in programmeStream
+            select programme;
+    }
+
+    //7. Retrieve all programmes that belong to the same faculty
+    resource function get programmes/faculty/[string faculty]() returns Programme[]|error {
+        stream<Programme, sql:Error?> programmeStream = programmeDevelopmentDb->query(` SELECT * FROM programmes WHERE faculty = ${faculty};`);
+        return from var programme in programmeStream
+            select programme;
+    }
+
+}
