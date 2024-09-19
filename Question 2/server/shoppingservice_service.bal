@@ -80,6 +80,7 @@ service "ShoppingService" on ep {
 
                 return error("Product with SKU " + sku + " not found");
             }
+        }
 
 
     remote function AddToCart(stream<CartRequest, grpc:Error?> clientStream) returns CartResponse|error {
@@ -90,7 +91,31 @@ service "ShoppingService" on ep {
 
     remote function PlaceOrder(stream<UserId, grpc:Error?> clientStream) returns OrderResponse|error {
 
-        return error grpc:UnimplementedError("not suppported yet");
+        string orderId = "";
+
+        // Iterate over the incoming stream of User IDs
+        check from UserId userId in clientStream
+            do {
+                string uid = userId.user_id;
+
+                // Retrieve the user's cart and place an order
+                CartRequest[]? cart = carts[uid]; // cart could be nil, so we need to check
+
+                if cart is CartRequest[] { // Check if cart is not nil
+                    // Process the order (e.g., assign order ID)
+                    orderId = "ORDER-" + uid + "-" + (1 + cart.length()).toString();
+                    _ = carts.remove(uid); // Clear the cart after placing the order
+                } else {
+                    return error("No items in cart for user " + uid);
+                }
+            };
+
+        // Return the order response
+        OrderResponse response = {
+            order_id: orderId,
+            message: "Order placed successfully"
+        };
+        return response;
 
     }
 }
