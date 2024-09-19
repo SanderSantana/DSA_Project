@@ -111,3 +111,13 @@ service /programme\-development on new http:Listener(9090) {
             WHERE programme_code = ${programmeCode};`);
         return http:OK;
     }
+    // 4. Retrieve a specific programme by specifying the programme code
+    resource function get programmes/[string programme_code]() returns Programme|ProgrammeNotFound|error {
+        Programme|sql:Error programme = programmeDevelopmentDb->queryRow(`SELECT * FROM programmes WHERE programme_code = ${programme_code}`);
+        if programme is sql:NoRowsError {
+            ProgrammeNotFound programmeNotFound = {
+                body: {message: string `programme: ${programme_code}`, details: string `programme/${programme_code}`, timeStamp: time:utcNow()}
+            };
+            return programmeNotFound;
+        }
+        return programme;
