@@ -122,6 +122,17 @@ service /programme\-development on new http:Listener(9090) {
         }
         return programme;
     }
+// 5. Delete a programme by programme code
+    resource function delete programmes/[string programmeCode]() returns http:NoContent|ProgrammeNotFound|error {
+        sql:ExecutionResult result = check programmeDevelopmentDb->execute(`DELETE FROM programmes WHERE programme_code = ${programmeCode};`);
+        if result.affectedRowCount == 0 {
+            ProgrammeNotFound programmeNotFound = {
+                body: {message: string `Programme ${programmeCode} not found.`, details: string `programme/${programmeCode}`, timeStamp: time:utcNow()}
+            };
+            return programmeNotFound;
+        }
+        return http:NO_CONTENT;
+    }
 
 
 
