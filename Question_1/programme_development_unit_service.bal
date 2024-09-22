@@ -133,14 +133,7 @@ service /programme\-development on new http:Listener(9090) {
         }
         return http:NO_CONTENT;
     }
-
-
-
-
-
-
-
-    // 6.retrieve all programmes due for review(AFTER 5 YEARS)
+// 6.retrieve all programmes due for review(AFTER 5 YEARS)
     resource function get programmes/dueForReview() returns Programme[]|error {
         stream<Programme, sql:Error?> programmeStream = programmeDevelopmentDb->query(`SELECT * FROM programmes WHERE DATE_ADD(registration_date, INTERVAL 5 YEAR) <= NOW()`);
         return from var programme in programmeStream
