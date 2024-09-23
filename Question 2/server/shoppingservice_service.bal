@@ -149,35 +149,30 @@ service "ShoppingService" on ep {
     }
 
     remote function AddToCart(stream<CartRequest, grpc:Error?> clientStream) returns CartResponse|error {
-
         // Iterate over the incoming stream of CartRequest messages
         check from CartRequest cartRequest in clientStream
             do {
                 string userId = cartRequest.user_id;
                 string sku = cartRequest.sku;
 
-                // Check if the product exists in the product list
+                // Check if the product exists
                 Product? product = products[sku];
                 if product is Product {
-                    // Initialize user's cart if it's nil
+                    // Get or initialize the user's cart
                     CartRequest[] userCart = carts[userId] ?: [];
 
-                    // Add the product to the user's cart
+                    // Add the product to the cart
                     userCart.push(cartRequest);
 
-                    // Update the cart in the map
+                    // Update the user's cart in the carts map
                     carts[userId] = userCart;
                 } else {
                     return error("Product with SKU " + sku + " not found.");
                 }
             };
 
-        // Return a success message after adding all items to the cart
-        CartResponse response = {
-            message: "Items successfully added to cart"
-        };
-        return response;
-
+        // Return a success message after all items are added to the cart
+        return {message: "Items successfully added to cart"};
     }
 
     remote function PlaceOrder(stream<UserId, grpc:Error?> clientStream) returns OrderResponse|error {
